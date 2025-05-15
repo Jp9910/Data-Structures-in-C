@@ -18,6 +18,7 @@ void removeFromList(char* nome);
 void showListNode(char* nome);
 void fprintList();
 void printList();
+void freeList();
 
 // global variables
 list* rede = NULL;
@@ -50,6 +51,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    freeList();
     return 0;
 }
 
@@ -177,7 +179,7 @@ void printList() {
         return;
     }
 
-     listNode* current = rede->head;
+    listNode* current = rede->head;
     printf("%s <- [", current->prev->nome);
 
     do {
@@ -186,4 +188,24 @@ void printList() {
     } while(current != rede->head);
 
     printf("] -> %s\n", current->nome);
+}
+
+void freeList() {
+    if (rede == NULL) {
+        free(rede);
+        return;
+    }
+
+    if (rede->head == NULL) {
+        free(rede->head);
+        return;
+    }
+
+    listNode* current = rede->head;
+    listNode* nextNode = NULL;
+    do {
+        nextNode = current->next;
+        free(current);
+        current = nextNode;
+    } while(current != NULL && current != rede->head);
 }
