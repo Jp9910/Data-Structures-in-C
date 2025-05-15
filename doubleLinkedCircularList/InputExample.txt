@@ -1,0 +1,22 @@
+ADD Jose da Silva
+SHOW Jose da Silva
+ADD Jose da Silva
+REMOVE Jose da Silva
+SHOW Jose da Silva
+ADD Joao dos Santos
+REMOVE Joao dos Santos
+SHOW -
+ADD Maria da Penha
+REMOVE Maria da Silva
+ADD Alan Turing
+SHOW Maria da Penha
+SHOW Alan Turing
+ADD ABC
+SHOW Alan Turing
+SHOW Maria da Penha
+ADD DEF
+REMOVE Maria da Penha
+ADD GHI
+SHOW ABC
+SHOW DEF
+SHOW GHI

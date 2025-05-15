@@ -1,0 +1,44 @@
+[EMPTY LIST]
+[OK ADDED - CREATED NEW HEAD] ADD Jose da Silva
+Jose da Silva <- [Jose da Silva, ] -> Jose da Silva
+[OK SHOWING] Jose da Silva <- Jose da Silva -> Jose da Silva
+Jose da Silva <- [Jose da Silva, ] -> Jose da Silva
+[ERROR ADDING - ALREADY EXIST] ADD Jose da Silva
+Jose da Silva <- [Jose da Silva, ] -> Jose da Silva
+[OK REMOVING - REMOVED HEAD] REMOVE Jose da Silva
+[EMPTY LIST]
+[ERROR SHOW - EMPTY LIST] ? <- Jose da Silva -> ?
+[EMPTY LIST]
+[OK ADDED - CREATED NEW HEAD] ADD Joao dos Santos
+Joao dos Santos <- [Joao dos Santos, ] -> Joao dos Santos
+[OK REMOVING - REMOVED HEAD] REMOVE Joao dos Santos
+[EMPTY LIST]
+[ERROR SHOW - EMPTY LIST] ? <- - -> ?
+[EMPTY LIST]
+[OK ADDED - CREATED NEW HEAD] ADD Maria da Penha
+Maria da Penha <- [Maria da Penha, ] -> Maria da Penha
+[ERROR REMOVING - NOT FOUND] REMOVE Maria da Silva
+Maria da Penha <- [Maria da Penha, ] -> Maria da Penha
+[OK ADDED] ADD Alan Turing
+Alan Turing <- [Maria da Penha, Alan Turing, ] -> Maria da Penha
+[OK SHOWING] Alan Turing <- Maria da Penha -> Alan Turing
+Alan Turing <- [Maria da Penha, Alan Turing, ] -> Maria da Penha
+[OK SHOWING] Maria da Penha <- Alan Turing -> Maria da Penha
+Alan Turing <- [Maria da Penha, Alan Turing, ] -> Maria da Penha
+[OK ADDED] ADD ABC
+ABC <- [Maria da Penha, Alan Turing, ABC, ] -> Maria da Penha
+[OK SHOWING] Maria da Penha <- Alan Turing -> ABC
+ABC <- [Maria da Penha, Alan Turing, ABC, ] -> Maria da Penha
+[OK SHOWING] ABC <- Maria da Penha -> Alan Turing
+ABC <- [Maria da Penha, Alan Turing, ABC, ] -> Maria da Penha
+[OK ADDED] ADD DEF
+DEF <- [Maria da Penha, Alan Turing, ABC, DEF, ] -> Maria da Penha
+[OK REMOVING] REMOVE Maria da Penha
+DEF <- [Alan Turing, ABC, DEF, ] -> Alan Turing
+[OK ADDED] ADD GHI
+GHI <- [Alan Turing, ABC, DEF, GHI, ] -> Alan Turing
+[OK SHOWING] Alan Turing <- ABC -> DEF
+GHI <- [Alan Turing, ABC, DEF, GHI, ] -> Alan Turing
+[OK SHOWING] ABC <- DEF -> GHI
+GHI <- [Alan Turing, ABC, DEF, GHI, ] -> Alan Turing
+[OK SHOWING] DEF <- GHI -> Alan Turing
