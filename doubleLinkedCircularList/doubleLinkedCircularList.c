@@ -100,7 +100,7 @@ void addToList(char* nome) {
 }
 
 void removeFromList(char* nome) {
-     listNode* current = rede->head;
+    listNode* current = rede->head;
 
     while(strcmp(current->nome,nome) != 0) {
         if (current->next == rede->head) {
@@ -115,10 +115,10 @@ void removeFromList(char* nome) {
 
     if (current->next == rede->head && current->prev == rede->head) {
         // se for o único elemento...
+        free(rede->head);
         rede->head = NULL;
-        rede = NULL;
-        free(current);
         free(rede);
+        rede = NULL;
         fprintf(output,"[OK REMOVING - REMOVED HEAD] REMOVE %s\n", nome);
         return;
     }

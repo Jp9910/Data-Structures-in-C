@@ -6,7 +6,7 @@
 
 #define nameSize 10
 #define qntContentInsert 200
-#define qntContentRemove 180
+#define qntContentRemove 150
 
 typedef struct binaryTreeNode {
     char content[nameSize];
@@ -50,35 +50,11 @@ int main(int argc, char* argv)
     treeInstance->root = NULL;
     treeInstance->nodeQuantity = 0;
 
-    insertToTree(treeInstance, "Testing 6");
-        printTreeInOrder(treeInstance);
-
-    insertToTree(treeInstance, "Testing 3");
-        printTreeInOrder(treeInstance);
-
-    insertToTree(treeInstance, "Testing 5");
-        printTreeInOrder(treeInstance);
-
-    insertToTree(treeInstance, "Testing 2");
-        printTreeInOrder(treeInstance);
-
-    insertToTree(treeInstance, "Testing 4");
-        printTreeInOrder(treeInstance);
-
-    removeFromTree(treeInstance, "Testing 3");
-        printTreeInOrder(treeInstance);
-        
     // insert generated content strings
     for(int i=0; i < qntContentInsert; i++) {
         insertToTree(treeInstance, content[i]);
         // printTreeInOrder(treeInstance);
     }
-
-    // insert numbers only (as strings)
-    // for(int i=0; i<qntContent; i++) {
-    //     char str[7];
-    //     insertToTree(treeInstance, itoa(i, str, 10));
-    // }
 
     // remove some random content
     for(int i=0; i < qntContentRemove; i++) {
@@ -156,7 +132,7 @@ void insertToTree(tree* tree, char* contentToInsert)
     updateParentPointer(parentOfCurrent, newNode, comparison);
     tree->nodeQuantity++;
 
-    printf("[OK INSERTED] %s\n", newNode->content);
+    printf("[OK INSERTED] %s - current nodes: %d\n", newNode->content, tree->nodeQuantity);
 }
 
 void removeFromTree(tree* tree, char* contentToRemove)
@@ -247,7 +223,6 @@ void removeFromTree(tree* tree, char* contentToRemove)
             parentOfLeftMost = leftMost;
             leftMost = leftMost->left;
         }
-        parentOfLeftMost->left = NULL;
 
         // if the root is being removed, the leftmost has to become the new root 
         if (current == tree->root) {
@@ -265,11 +240,12 @@ void removeFromTree(tree* tree, char* contentToRemove)
             leftMost->left = current->left;
         if (current->right != leftMost) // shouldnt point to itself
             leftMost->right = current->right;
-        
+
+        parentOfLeftMost->left = NULL; // in case parentOfLeftMost = current, this needs to be after the lines above 
     }
 
     // free and nullify removed element
-    printf("[OK REMOVED] %s\n", current->content);
+    printf("[OK REMOVED] %s - current nodes: %d\n", current->content, tree->nodeQuantity-1);
     free(current);
     current = NULL;
     tree->nodeQuantity--;
@@ -289,7 +265,7 @@ void printSubtreeInOrder(node* subtree) { //L-P-R
         printSubtreeInOrder(subtree->left);
     }
 
-    printf(" > %s\n > " , subtree->content);
+    printf("> %s\n", subtree->content);
 
     if (subtree->right != NULL) {
         printSubtreeInOrder(subtree->right);
@@ -301,14 +277,14 @@ void printSubtreePreOrder(node* subtree) { //P-L-R
         printf("[ERROR PRINTING PreOrder - NULL SUBTREE]");
     }
 
-    printf(" > %s\n > " , subtree->content);
+    printf("> %s\n" , subtree->content);
 
     if (subtree->left != NULL) {
-        printSubtreeInOrder(subtree->left);
+        printSubtreePreOrder(subtree->left);
     }
 
     if (subtree->right != NULL) {
-        printSubtreeInOrder(subtree->right);
+        printSubtreePreOrder(subtree->right);
     }
 }
 
@@ -318,14 +294,14 @@ void printSubtreePostOrder(node* subtree) { //L-R-P
     }
 
     if (subtree->left != NULL) {
-        printSubtreeInOrder(subtree->left);
+        printSubtreePostOrder(subtree->left);
     }
 
     if (subtree->right != NULL) {
-        printSubtreeInOrder(subtree->right);
+        printSubtreePostOrder(subtree->right);
     }
 
-    printf(" > %s\n > " , subtree->content);
+    printf("> %s\n", subtree->content);
 }
 
 void updateParentPointer(node* parent, node* toBePointedAt, int leftOrRight) {
