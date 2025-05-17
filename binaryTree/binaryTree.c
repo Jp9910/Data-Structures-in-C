@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#define nameSize 10
+#define nameSize 12
 #define qntContentInsert 200
 #define qntContentRemove 150
 
@@ -235,13 +235,20 @@ void removeFromTree(tree* tree, char* contentToRemove)
         }
 
         // the new subtree root has to point to the children of the node that's being removed
-        // (unless it's itself - such as the case [L:1, P:2, R:3] while removing P:2)
-        if (current->left != leftMost) // shouldnt point to itself
-            leftMost->left = current->left;
-        if (current->right != leftMost) // shouldnt point to itself
-            leftMost->right = current->right;
+        leftMost->left = current->left; // current->left cannot be = leftMost because it starts with being = to current->right
 
-        parentOfLeftMost->left = NULL; // in case parentOfLeftMost = current, this needs to be after the lines above 
+        // but shouldnt point to itself - such as in the case [L:1, P:2, R:3] while removing P:2
+        if (current->right != leftMost) { // shouldnt point to itself
+            if (leftMost->right != NULL) { 
+                // if this leftMost element has other elements to its right, his parent will have to inherit them
+                // (it cant have more elements to its left, since its the left-most one)
+                parentOfLeftMost->left = leftMost->right;
+            } else {
+                // parentOfLeftMost wont point to leftMost anymore since leftMost is being shifted
+                parentOfLeftMost->left = NULL;
+            }
+            leftMost->right = current->right;
+        }
     }
 
     // free and nullify removed element
