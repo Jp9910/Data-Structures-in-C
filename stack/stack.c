@@ -24,7 +24,7 @@ void printStack();
 // global variable
 stack* stackInstance = NULL;
 
-int main(int argc, char* argv)
+int main(int argc, char* argv[])
 {
     // char arr[qntDocuments][documentNameSize] = {"Document A", "BCASD","ASDFASD"};
 

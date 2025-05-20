@@ -35,7 +35,7 @@ void freeSubtree(node* subtree); //L-R-P
 // global variable
 tree* treeInstance = NULL;
 
-int main(int argc, char* argv)
+int main(int argc, char* argv[])
 {
     srand(time(NULL));
     char** content = (char**) malloc(qntContentInsert * sizeof(char*));

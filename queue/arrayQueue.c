@@ -22,7 +22,7 @@ void printQueue();
 // global variable
 queue* Q = NULL;
 
-int main(int argc, char* argv)
+int main(int argc, char* argv[])
 {
     // char arr[qntPrinters][nameSize] = {"printer1", "printer2","printer3"};
     char** waiters = (char**) malloc(qntPeople * sizeof(char*));
