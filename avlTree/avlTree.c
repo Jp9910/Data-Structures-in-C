@@ -23,7 +23,7 @@ void insertToAvlTreeIterative(avlTree* tree, int contentToInsert);
 void removeFromAvlTree(avlTree* tree, int contentToRemove);
 void rotateRight(node* subtreeRoot);
 void rotateLeft(node* subtreeRoot);
-void balanceSubtree(node* subtree);
+void balanceSubtree(node* subtree, node* parentOfSubtree, int pathFromParentToSubtree);
 int calculateBalancingFactor(node* node);
 void recalcNodeHeight(node* node);
 int getNodeHeight(node* subtree);
@@ -40,11 +40,18 @@ int main(int argc, char** argv)
     tree = (avlTree*) malloc(sizeof(avlTree));
     tree->root = NULL;
 
-    for (int i=0; i<insertQnt; i++) {
-        int randomNumber = (rand() % (5000 + 1 - -5000) + -5000); // random ascii char between -5000 and 5000
-        printf("Random: %d",randomNumber);
-        insertToAvlTreeIterative(tree, randomNumber);
-    }
+    // for (int i=0; i<insertQnt; i++) {
+    //     int randomNumber = (rand() % (1000)); // random between 0 and 1000
+    //     insertToAvlTreeIterative(tree, randomNumber);
+    //     printTreeInOrder(tree);
+    // }
+    
+    insertToAvlTreeIterative(tree, 705);
+    insertToAvlTreeIterative(tree, 52);
+    insertToAvlTreeIterative(tree, 756);
+    insertToAvlTreeIterative(tree, 594);
+    printTreeInOrder(tree);
+    insertToAvlTreeIterative(tree, 292);
     printTreeInOrder(tree);
 }
 
@@ -124,11 +131,18 @@ void insertToAvlTreeIterative(avlTree* tree, int contentToInsert) {
 
     // Repath: Balance all nodes in path (could use a stack/recursion instead of repathing)
     current = tree->root;
+    parentOfCurrent = current;
     while(current != NULL) {
-        balanceSubtree(current);
+        balanceSubtree(current,parentOfCurrent,pathFromParentToCurrent);
         pathFromParentToCurrent = contentToInsert - current->content;
-        if (pathFromParentToCurrent < 0) current = current->left;
-        if (pathFromParentToCurrent > 0) current = current->right;
+        if (pathFromParentToCurrent < 0) {
+            parentOfCurrent = current;
+            current = current->left;
+        }
+        if (pathFromParentToCurrent > 0) {
+            parentOfCurrent = current;
+            current = current->right;
+        } 
         if (pathFromParentToCurrent == 0) current = NULL; // found just-inserted node. stop loop
     }
 
@@ -183,7 +197,7 @@ void recalcNodeHeight(node* node) {
     node->nodeHeight = 1 + getMax(getNodeHeight(node->left),getNodeHeight(node->left));
 }
 
-void balanceSubtree(node* subtree) {
+void balanceSubtree(node* subtree, node* parentOfSubtree, int pathFromParentToSubtree) {
     if (subtree == NULL) {
         return;
     }
@@ -193,16 +207,20 @@ void balanceSubtree(node* subtree) {
     if (balance > 1) {
         //rotate and recalculate height
         if (calculateBalancingFactor(subtree->right) < 0) {
+            updateParentPointer(parentOfSubtree, subtree->left,pathFromParentToSubtree);
             rotateRight(subtree->right);
         }
+        updateParentPointer(parentOfSubtree, subtree->right,pathFromParentToSubtree);
         rotateLeft(subtree);
     }
-
+    
     if (balance < -1) {
         //rotate and recalculate height
         if (calculateBalancingFactor(subtree->left) > 0) {
+            updateParentPointer(parentOfSubtree, subtree->right,pathFromParentToSubtree);
             rotateLeft(subtree->left);
         }
+        updateParentPointer(parentOfSubtree, subtree->left,pathFromParentToSubtree);
         rotateRight(subtree);
     }
 }
@@ -227,8 +245,13 @@ int getMax(int a, int b) {
 }
 
 void updateParentPointer(node* parent, node* toBePointedAt, int leftOrRight) {
+    if (parent == toBePointedAt) {
+        printf(">>>[Can't update parent pointer - same as to be pointed at]<<<\n");
+        return;
+    }
+
     if (leftOrRight == 0) {
-        printf(">>>[ERROR - INVALID POINTER UPDATE OR COMPARISON]<<<");
+        printf(">>>[ERROR - INVALID POINTER UPDATE OR COMPARISON]<<<\n");
     }
 
     if (leftOrRight < 0) {
