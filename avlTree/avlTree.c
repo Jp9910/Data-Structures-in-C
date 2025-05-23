@@ -19,17 +19,20 @@ typedef struct avlTree {
     int treeHeight;
 } avlTree;
 
-void insertToAvlTreeIterative(avlTree* tree, int contentToInsert);
+void insertToAvlTree(avlTree* tree, int contentToInsert);
+node* insertInSubtree(node* current, int contentToInsert);
 void removeFromAvlTree(avlTree* tree, int contentToRemove);
-void rotateRight(node* subtreeRoot);
-void rotateLeft(node* subtreeRoot);
-void balanceSubtree(node* subtree, node* parentOfSubtree, int pathFromParentToSubtree);
+node* rotateRight(node* subtreeRoot);
+node* rotateLeft(node* subtreeRoot);
+node* balanceSubtree(node* subtree);
 int calculateBalancingFactor(node* node);
 void recalcNodeHeight(node* node);
 int getNodeHeight(node* subtree);
 void updateParentPointer(node* parent, node* toBePointedAt, int leftOrRight);
-void printTreeInOrder(avlTree* subtree); //L-P-R
-void printSubtreeInOrder(node* subtree); //L-P-R
+void printTreePreOrder(avlTree* subtree); //L-P-R
+void printSubtreePreOrder(node* subtree); //L-P-R
+void printTreeGraphically(avlTree* tree);
+void printSubtreeGraphically(node* subtree, int nodeQnt);
 int getMax(int a, int b);
 
 avlTree* tree = NULL;
@@ -39,121 +42,81 @@ int main(int argc, char** argv)
     srand(time(NULL));
     tree = (avlTree*) malloc(sizeof(avlTree));
     tree->root = NULL;
+    tree->nodeQnt = 0;
+    tree->treeHeight = 0;
 
     // for (int i=0; i<insertQnt; i++) {
     //     int randomNumber = (rand() % (1000)); // random between 0 and 1000
-    //     insertToAvlTreeIterative(tree, randomNumber);
-    //     printTreeInOrder(tree);
+    //     insertToAvlTree(tree, randomNumber);
+    //     printTreePreOrder(tree);
     // }
-    
-    insertToAvlTreeIterative(tree, 705);
-    insertToAvlTreeIterative(tree, 52);
-    insertToAvlTreeIterative(tree, 756);
-    insertToAvlTreeIterative(tree, 594);
-    printTreeInOrder(tree);
-    insertToAvlTreeIterative(tree, 292);
-    printTreeInOrder(tree);
+
+    insertToAvlTree(tree, 6);
+    printTreePreOrder(tree);
+    insertToAvlTree(tree, 7);
+    printTreePreOrder(tree);
+    insertToAvlTree(tree, 8);
+    printTreePreOrder(tree);
+    insertToAvlTree(tree, 9);
+    printTreePreOrder(tree);
+    insertToAvlTree(tree, 4);
+    printTreePreOrder(tree);
+    insertToAvlTree(tree, 5);
+    printTreePreOrder(tree);
+
+    printTreeGraphically(tree);
 }
 
-void insertToAvlTreeIterative(avlTree* tree, int contentToInsert) {
+void insertToAvlTree(avlTree* tree, int contentToInsert) {
     // The insertion works better recursively or with a stack
 
     printf("[ATTEMPTING INSERT] %d\n", contentToInsert);
-
+    node* newRoot = insertInSubtree(tree->root, contentToInsert);
     if (tree->root == NULL) {
-        // first insertion
-        tree->root = (node*) malloc(sizeof(node));
-        tree->root->left = NULL;
-        tree->root->right = NULL;
-        tree->root->content = contentToInsert;
-        tree->root->nodeHeight = 1;
-        printf("[OK INSERTED NEW ROOT] %d\n", tree->root->content);
-        tree->nodeQnt = 1;
-        tree->treeHeight = 1;
-        return;
+        tree->root = newRoot;
     }
-
-    node* current = tree->root;
-    node* parentOfCurrent = tree->root;
-    int pathFromParentToCurrent = 0;
-    int pathLength = 1; // determined by how many times it went to left or right (+ 1)
-
-    // Find correct place for new element
-    while(current != NULL) {
-        pathFromParentToCurrent = contentToInsert - current->content;
-        pathLength++;
-        if (pathFromParentToCurrent < 0) {
-            // go to left subtree
-            parentOfCurrent = current;
-            current = current->left;
-            // could stack the node to avoid repathing later
-        }
-        if (pathFromParentToCurrent > 0) {
-            // go to right subtree
-            parentOfCurrent = current;
-            current = current->right;
-            // could stack the node to avoid repathing later
-        }
-        if (pathFromParentToCurrent == 0) {
-            // content is already in tree
-            printf("[ERROR INSERTING - REPEATED CONTENT] %d\n", contentToInsert);
-            return;
-        }
-    }
-
-    // here, current (or newNode) should be NULL
-    node* newNode = (node*) malloc(sizeof(node));
-    newNode->content = contentToInsert;
-    newNode->nodeHeight = 1;
-    newNode->left = NULL;
-    newNode->right = NULL;
-
-    // parent->left OR parent->right should point to him depending on last move direction
-    updateParentPointer(parentOfCurrent, newNode, pathFromParentToCurrent);
-
     tree->nodeQnt++;
-    if (pathLength > tree->treeHeight) {
-        tree->treeHeight = pathLength; // tree height = height of highest node
+    tree->treeHeight = tree->root->nodeHeight;
+    printf("[OK INSERTED] %d - # of current nodes: %d\n", contentToInsert, tree->nodeQnt);
+}
+
+node* insertInSubtree(node* current, int contentToInsert) {
+
+    // base case - null node is found
+    if (current == NULL) {
+        current = (node*) malloc(sizeof(node));
+        current->content = contentToInsert;
+        current->left = NULL;
+        current->right = NULL;
+        current->nodeHeight = 1;
+        return current;
     }
 
-    // Repath: Update height for all nodes in path (could use a stack/recursion instead of repathing)
-    current = tree->root;
-    while(current != NULL) {
-        if (pathLength > current->nodeHeight) {
-            current->nodeHeight = pathLength;
-        }
-        pathLength--;
-        pathFromParentToCurrent = contentToInsert - current->content;
-        if (pathFromParentToCurrent < 0) current = current->left;
-        if (pathFromParentToCurrent > 0) current = current->right;
-        if (pathFromParentToCurrent == 0) current = NULL; // found just-inserted node. stop loop
+    int pathFromParentToCurrent = contentToInsert - current->content;
+    node* newNode;
+
+    // recur on left or right (until current = null)
+    // (repeated content goes to right)
+    if (pathFromParentToCurrent >= 0) {
+        newNode = insertInSubtree(current->right, contentToInsert);
+        current->right = newNode; // update parent reference to it
+    } else {
+        newNode = insertInSubtree(current->left, contentToInsert);
+        current->left = newNode; // update parent reference to it
     }
 
-    // Repath: Balance all nodes in path (could use a stack/recursion instead of repathing)
-    current = tree->root;
-    parentOfCurrent = current;
-    while(current != NULL) {
-        balanceSubtree(current,parentOfCurrent,pathFromParentToCurrent);
-        pathFromParentToCurrent = contentToInsert - current->content;
-        if (pathFromParentToCurrent < 0) {
-            parentOfCurrent = current;
-            current = current->left;
-        }
-        if (pathFromParentToCurrent > 0) {
-            parentOfCurrent = current;
-            current = current->right;
-        } 
-        if (pathFromParentToCurrent == 0) current = NULL; // found just-inserted node. stop loop
-    }
-
-    printf("[OK INSERTED] %d - current nodes: %d\n", newNode->content, tree->nodeQnt);
+    // update height and balance all nodes on way back
+    recalcNodeHeight(current);
+    node* newSubtreeRoot = balanceSubtree(current);
+    return newSubtreeRoot;
 }
 
 void removeFromAvlTree(avlTree* tree, int contentToRemove) {
     return;
 }
 
-void rotateLeft(node* subtreeRoot) {
+// returns the new root of the subtree (the axis of rotation)
+node* rotateLeft(node* subtreeRoot) {
     // root               axis
     //   \                / \
     //   axis   ---->   root X
@@ -168,11 +131,14 @@ void rotateLeft(node* subtreeRoot) {
     axis->left = subtreeRoot;
 
     // update node heights
-    subtreeRoot->nodeHeight = 1 + getMax(getNodeHeight(subtreeRoot->left),getNodeHeight(subtreeRoot->left));
-    axis->nodeHeight = 1 + getMax(getNodeHeight(axis->left),getNodeHeight(axis->left));
+    recalcNodeHeight(subtreeRoot);
+    recalcNodeHeight(axis);
+
+    return axis;
 }
 
-void rotateRight(node* subtreeRoot) {
+// returns the new root of the subtree (the axis of rotation)
+node* rotateRight(node* subtreeRoot) {
     //    root           axis
     //    /              / \
     //  axis   ---->    X  root
@@ -187,42 +153,44 @@ void rotateRight(node* subtreeRoot) {
     axis->right = subtreeRoot;
 
     // update node heights
-    subtreeRoot->nodeHeight = 1 + getMax(getNodeHeight(subtreeRoot->left),getNodeHeight(subtreeRoot->left));
-    axis->nodeHeight = 1 + getMax(getNodeHeight(axis->left),getNodeHeight(axis->left));
+    recalcNodeHeight(subtreeRoot);
+    recalcNodeHeight(axis);
+
+    return axis;
 }
 
 void recalcNodeHeight(node* node) {
-    if (node == NULL) 
+    if (node == NULL)
         return;
-    node->nodeHeight = 1 + getMax(getNodeHeight(node->left),getNodeHeight(node->left));
+    node->nodeHeight = 1 + getMax(getNodeHeight(node->left),getNodeHeight(node->right));
 }
 
-void balanceSubtree(node* subtree, node* parentOfSubtree, int pathFromParentToSubtree) {
+// returns the new root of the subtree (the axis of rotation, or itself if its not rotated)
+node* balanceSubtree(node* subtree) {
     if (subtree == NULL) {
-        return;
+        return NULL;
     }
 
+    node* newSubtreeRoot = subtree;
     int balance = calculateBalancingFactor(subtree);
 
     if (balance > 1) {
         //rotate and recalculate height
         if (calculateBalancingFactor(subtree->right) < 0) {
-            updateParentPointer(parentOfSubtree, subtree->left,pathFromParentToSubtree);
-            rotateRight(subtree->right);
+            subtree->right = rotateRight(subtree->right); // update the parent's right pointer ("subtree->right") of the rotated subtree to point to the axis of rotation, which will turn into the new root of the right subtree
         }
-        updateParentPointer(parentOfSubtree, subtree->right,pathFromParentToSubtree);
-        rotateLeft(subtree);
+        newSubtreeRoot = rotateLeft(subtree); // return the new subtree root so the parent of it can point to it on the previous function
     }
-    
+
     if (balance < -1) {
         //rotate and recalculate height
         if (calculateBalancingFactor(subtree->left) > 0) {
-            updateParentPointer(parentOfSubtree, subtree->right,pathFromParentToSubtree);
-            rotateLeft(subtree->left);
+            subtree->left = rotateLeft(subtree->left); // update the parent's left pointer ("subtree->left") of the rotated subtree to point to the axis of rotation, which will turn into the new root of the left subtree
         }
-        updateParentPointer(parentOfSubtree, subtree->left,pathFromParentToSubtree);
-        rotateRight(subtree);
+        newSubtreeRoot = rotateRight(subtree); // return the new subtree root so the parent of it can point to it on the previous function
     }
+
+    return newSubtreeRoot;
 }
 
 int calculateBalancingFactor(node* node) {
@@ -265,29 +233,78 @@ void updateParentPointer(node* parent, node* toBePointedAt, int leftOrRight) {
     }
 }
 
-void printTreeInOrder(avlTree* tree) {
+void printTreePreOrder(avlTree* tree) {
     if (tree == NULL || tree->root == NULL) {
-        printf("[PRINT IN ORDER - TREE IS NULL]\n");
+        printf("[PRINT PRE ORDER - TREE IS NULL]\n");
         return;
     }
 
     printf("[Quantity of tree nodes]: %d\n", tree->nodeQnt);
-    printSubtreeInOrder(tree->root);
+    printSubtreePreOrder(tree->root);
 }
 
-void printSubtreeInOrder(node* subtree) { //L-P-R
+void printSubtreePreOrder(node* subtree) { //P-L-R
     if (subtree == NULL) {
-        printf("[ERROR PRINTING InOrder - NULL SUBTREE]");
+        printf("[ERROR PRINTING PreOrder - NULL SUBTREE]");
     }
+
+    printf("> %d [height: %d]\n" , subtree->content, subtree->nodeHeight);
 
     if (subtree->left != NULL) {
-        printSubtreeInOrder(subtree->left);
+        printSubtreePreOrder(subtree->left);
     }
 
-    printf("> %d\n", subtree->content);
-
     if (subtree->right != NULL) {
-        printSubtreeInOrder(subtree->right);
+        printSubtreePreOrder(subtree->right);
+    }
+}
+
+void printTreeGraphically(avlTree* tree) {
+    if (tree == NULL || tree->root == NULL) {
+        printf("[PRINT GRAPHICALLY - TREE IS NULL]\n");
+        return;
+    }
+
+    printf("[Quantity of tree nodes]: %d\n", tree->nodeQnt);
+    printSubtreeGraphically(tree->root, tree->nodeQnt);
+}
+
+void printSubtreeGraphically(node* subtree, int nodeQnt) { 
+    //     P
+    //    / \
+    //   L   R
+    //  /   / \
+    // LL  RL RR
+
+    // Tem que ser em largura...
+
+    int spacingNumber = nodeQnt;
+    char* spaces = (char*) malloc((nodeQnt+1)*sizeof(char));
+    while (subtree != NULL) {
+        spaces[0] = '\0';
+        // strcpy(spaces, "");
+
+        for (int i=0; i<spacingNumber; i++) {
+            // strcat(spaces, " ");
+            spaces[i] = ' ';
+        }
+        spaces[spacingNumber] = '\0';
+
+        printf("  %s%d\n",spaces,subtree->content);
+        if (subtree->left != NULL && subtree->right != NULL) {
+            printf(" %s/ \\ \n",spaces);
+            printf("%s%d   %d\n",spaces,subtree->left->content,subtree->right->content);
+        }
+        if (subtree->left == NULL && subtree->right != NULL) {
+            printf(" %s  \\ \n",spaces);
+            printf("%s %s%d \n",spaces,spaces,subtree->right->content);
+        }
+        if (subtree->left != NULL && subtree->right == NULL) {
+            printf(" %s/ \n",spaces);
+            printf("%s%d \n",spaces,spaces,subtree->right->content);
+        }
+        spacingNumber--;
+        subtree = NULL;
     }
 }
 
