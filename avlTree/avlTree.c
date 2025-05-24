@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <time.h>
 
-#define insertQnt 10
+#define insertQnt 1000
 
 typedef struct avlTreeNode {
     int content;
@@ -29,13 +29,16 @@ int calculateBalancingFactor(node* node);
 void recalcNodeHeight(node* node);
 int getNodeHeight(node* subtree);
 void updateParentPointer(node* parent, node* toBePointedAt, int leftOrRight);
-void printTreePreOrder(avlTree* subtree); //L-P-R
-void printSubtreePreOrder(node* subtree); //L-P-R
+void printTreeInOrder(avlTree* tree); //L-P-R
+void printSubtreeInOrder(node* subtree);
+void printTreePreOrder(avlTree* subtree); //P-L-R
+void printSubtreePreOrder(node* subtree);
 void printTreeGraphically(avlTree* tree);
 void printSubtreeGraphically(node* subtree, int nodeQnt);
 int getMax(int a, int b);
 
 avlTree* tree = NULL;
+int nodeNumberForPrinting = 0;
 
 int main(int argc, char** argv)
 {
@@ -45,24 +48,11 @@ int main(int argc, char** argv)
     tree->nodeQnt = 0;
     tree->treeHeight = 0;
 
-    // for (int i=0; i<insertQnt; i++) {
-    //     int randomNumber = (rand() % (1000)); // random between 0 and 1000
-    //     insertToAvlTree(tree, randomNumber);
-    //     printTreePreOrder(tree);
-    // }
-
-    insertToAvlTree(tree, 6);
-    printTreePreOrder(tree);
-    insertToAvlTree(tree, 7);
-    printTreePreOrder(tree);
-    insertToAvlTree(tree, 8);
-    printTreePreOrder(tree);
-    insertToAvlTree(tree, 9);
-    printTreePreOrder(tree);
-    insertToAvlTree(tree, 4);
-    printTreePreOrder(tree);
-    insertToAvlTree(tree, 5);
-    printTreePreOrder(tree);
+    for (int i=0; i<insertQnt; i++) {
+        int randomNumber = (rand() % (5001 - -5000) + -5000); // random between -5000 and 5000
+        insertToAvlTree(tree, randomNumber);
+    }
+    printTreeInOrder(tree);
 
     printTreeGraphically(tree);
 }
@@ -239,8 +229,12 @@ void printTreePreOrder(avlTree* tree) {
         return;
     }
 
+    printf("\n[PRINT PRE ORDER]\n");
     printf("[Quantity of tree nodes]: %d\n", tree->nodeQnt);
+    printf("[Height of tree]: %d\n", tree->treeHeight);
+    nodeNumberForPrinting = 0;
     printSubtreePreOrder(tree->root);
+    nodeNumberForPrinting = 0;
 }
 
 void printSubtreePreOrder(node* subtree) { //P-L-R
@@ -248,7 +242,7 @@ void printSubtreePreOrder(node* subtree) { //P-L-R
         printf("[ERROR PRINTING PreOrder - NULL SUBTREE]");
     }
 
-    printf("> %d [height: %d]\n" , subtree->content, subtree->nodeHeight);
+    printf("> %d [height: %d] [%d]\n" , subtree->content, subtree->nodeHeight, ++nodeNumberForPrinting);
 
     if (subtree->left != NULL) {
         printSubtreePreOrder(subtree->left);
@@ -259,7 +253,38 @@ void printSubtreePreOrder(node* subtree) { //P-L-R
     }
 }
 
+void printTreeInOrder(avlTree* tree) {
+    if (tree == NULL || tree->root == NULL) {
+        printf("[PRINT IN ORDER - TREE IS NULL]\n");
+        return;
+    }
+
+    printf("\n[PRINT IN ORDER]\n");
+    printf("[Quantity of tree nodes]: %d\n", tree->nodeQnt);
+    printf("[Height of tree]: %d\n", tree->treeHeight);
+    nodeNumberForPrinting = 0;
+    printSubtreeInOrder(tree->root);
+    nodeNumberForPrinting = 0;
+}
+
+void printSubtreeInOrder(node* subtree) { //L-P-R
+    if (subtree == NULL) {
+        printf("[ERROR PRINTING InOrder - NULL SUBTREE]");
+    }
+
+    if (subtree->left != NULL) {
+        printSubtreeInOrder(subtree->left);
+    }
+
+    printf("> %d [height: %d] [%d]\n" , subtree->content, subtree->nodeHeight, ++nodeNumberForPrinting);
+
+    if (subtree->right != NULL) {
+        printSubtreeInOrder(subtree->right);
+    }
+}
+
 void printTreeGraphically(avlTree* tree) {
+    // Not working...
     if (tree == NULL || tree->root == NULL) {
         printf("[PRINT GRAPHICALLY - TREE IS NULL]\n");
         return;
@@ -269,7 +294,9 @@ void printTreeGraphically(avlTree* tree) {
     printSubtreeGraphically(tree->root, tree->nodeQnt);
 }
 
-void printSubtreeGraphically(node* subtree, int nodeQnt) { 
+void printSubtreeGraphically(node* subtree, int nodeQnt) {
+    // Not working...
+
     //     P
     //    / \
     //   L   R
