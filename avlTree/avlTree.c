@@ -4,7 +4,10 @@
 #include <stdint.h>
 #include <time.h>
 
-#define insertQnt 1000
+#define insertQnt 10
+#define removeQnt 10
+#define minContent -10
+#define maxContent 10
 
 typedef struct avlTreeNode {
     int content;
@@ -22,6 +25,8 @@ typedef struct avlTree {
 void insertToAvlTree(avlTree* tree, int contentToInsert);
 node* insertInSubtree(node* current, int contentToInsert);
 void removeFromAvlTree(avlTree* tree, int contentToRemove);
+node* removeFromSubtree(node* current, int contentToRemove);
+void removeElementFromTree(node* element, node* parentOfElement, int updateLeftOrRightParentPointer);
 node* rotateRight(node* subtreeRoot);
 node* rotateLeft(node* subtreeRoot);
 node* balanceSubtree(node* subtree);
@@ -49,12 +54,18 @@ int main(int argc, char** argv)
     tree->treeHeight = 0;
 
     for (int i=0; i<insertQnt; i++) {
-        int randomNumber = (rand() % (5001 - -5000) + -5000); // random between -5000 and 5000
+        int randomNumber = (rand() % (maxContent + 1 - minContent) + minContent); // random between -5000 and 5000
         insertToAvlTree(tree, randomNumber);
     }
     printTreeInOrder(tree);
 
-    printTreeGraphically(tree);
+    for (int i=0; i<removeQnt; i++) {
+        int randomNumber = (rand() % (maxContent + 1 - minContent) + minContent); // random between -5000 and 5000
+        removeFromAvlTree(tree, randomNumber);
+    }
+    printTreeInOrder(tree);
+
+    // printTreeGraphically(tree);
 }
 
 void insertToAvlTree(avlTree* tree, int contentToInsert) {
@@ -102,7 +113,131 @@ node* insertInSubtree(node* current, int contentToInsert) {
 }
 
 void removeFromAvlTree(avlTree* tree, int contentToRemove) {
-    return;
+    // If there are repeated elements, it's going to remove only the first one that's found (closest to the root)
+
+    printf("[ATTEMPTING REMOVE] %d\n", contentToRemove);
+    if (tree == NULL || tree->root == NULL) {
+        printf("[ERROR REMOVING - EMPTY TREE] %d\n", contentToRemove);
+        return;
+    }
+
+    removeFromSubtree(tree->root, contentToRemove);
+    tree->treeHeight = tree->root->nodeHeight;
+}
+
+node* removeFromSubtree(node* current, int contentToRemove) {
+    // base case - null node is found
+    if (current == NULL) {
+        printf("[ERROR REMOVING - CONTENT NOT FOUND] %d\n", contentToRemove);
+        return NULL;
+    }
+
+    int pathFromParentToCurrent = contentToRemove - current->content;
+    node* removed;
+
+    // recur on left or right (until a match or NULL is found)
+    if (pathFromParentToCurrent == 0) { // found element
+        return current;
+    }
+    if (pathFromParentToCurrent > 0) {
+        removed = removeFromSubtree(current->right, contentToRemove); // recur until element is found
+        if (removed != NULL) { // only remove it once during recursion
+            removeElementFromTree(removed, current, 1); // +1 so parent's right pointer gets updated
+        }
+    }
+    if (pathFromParentToCurrent < 0) {
+        removed = removeFromSubtree(current->left, contentToRemove); // recur until element is found
+        if (removed != NULL) { // only remove it once during recursion
+            removeElementFromTree(removed, current, -1); // -1 so parent's left pointer gets updated
+        }
+    }
+
+    // update height and balance all nodes on way back
+    recalcNodeHeight(current);
+    balanceSubtree(current);
+    return NULL;
+}
+
+void removeElementFromTree(node* element, node* parentOfElement, int updateLeftOrRightParentPointer) {
+    // the way to remove it depends on how many subtrees the element has
+
+    // if its a leaf node, can just remove it
+    if (element->left == NULL && element->right == NULL) {
+        // if its also the only node (the root), could free the tree (the node itself will be freed later in the function)
+        if (element == tree->root) {
+            free(tree->root);
+            tree->root = NULL;
+            tree->nodeQnt--;
+            return;
+        } else {
+            // parent of current should stop pointing to him
+            updateParentPointer(parentOfElement, NULL, updateLeftOrRightParentPointer);
+        }
+    }
+
+    // if it has one subtree (to the left), the parent points to that subtree.
+    // but if its the tree root, the subtree becomes the new root
+    if (element->left != NULL && element->right == NULL) {
+        if (element == tree->root) {
+            tree->root = element->left;
+        } else {
+            updateParentPointer(parentOfElement, element->left, updateLeftOrRightParentPointer);
+        }
+    }
+
+    // if it has one subtree (to the right), the parent points to that subtree.
+    // but if its the tree root, the subtree becomes the new root
+    if (element->left == NULL && element->right != NULL) {
+        if (element == tree->root) {
+            tree->root = element->right;
+        } else {
+            updateParentPointer(parentOfElement, element->right, updateLeftOrRightParentPointer);
+        }
+    }
+
+    // if it has two subtrees, the parent points to either the left-most element on the right subtree
+    // OR the right-most element on the left subtree
+    if (element->left != NULL && element->right != NULL) {
+        // I'll point to the left-most on the right subtree
+
+        node* leftMost = element->right; // go to right subtree
+        node* parentOfLeftMost = element; // after shifting the leftMost, his parent cant point to him anymore
+
+        // navigate as much as possible to left
+        while(leftMost->left != NULL) {
+            parentOfLeftMost = leftMost;
+            leftMost = leftMost->left;
+        }
+
+        // if the root is being removed, the leftmost has to become the new root 
+        if (element == tree->root) {
+            tree->root = leftMost;
+        }
+        // else, now parent points to this element
+        else {
+            updateParentPointer(parentOfElement, leftMost, updateLeftOrRightParentPointer);
+        }
+
+        // the new subtree root has to point to the children of the node that's being removed
+        leftMost->left = element->left; // element->left cannot be = leftMost because it starts with being = to element->right
+
+        // but shouldnt point to itself - such as in the case [L:1, P:2, R:3] while removing P:2
+        if (element->right != leftMost) { // shouldnt point to itself
+            if (leftMost->right != NULL) { 
+                // if this leftMost element has other elements to its right, his parent will have to inherit them
+                // (it cant have more elements to its left, since its the left-most one)
+                parentOfLeftMost->left = leftMost->right;
+            } else {
+                // parentOfLeftMost wont point to leftMost anymore since leftMost is being shifted
+                parentOfLeftMost->left = NULL;
+            }
+            leftMost->right = element->right;
+        }
+    }
+
+    printf("[OK REMOVED] %d - current nodes: %d\n", element->content, tree->nodeQnt);
+    free(element);
+    tree->nodeQnt--;
 }
 
 // returns the new root of the subtree (the axis of rotation)
